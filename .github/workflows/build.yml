@@ -44,18 +44,4 @@ jobs:
         files: ./v2rayN/v2rayN.zip
         token: ${{ secrets.GITHUB_TOKEN }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        git push origin $TAG_NAME  # 推送标签到远程仓库
-        git tag  # 列出所有标签，确认标签已经创建
-
-    - name: Ensure tag is fetched
-      run: git fetch --tags  # 拉取远程标签
-
-    - name: Wait for GitHub to recognize the tag
-      run: sleep 60  # 延迟 60 秒，确保标签同步
-
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ./v2rayN/v2rayN.zip  # 确保上传的是构建产物
-      env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
