@@ -11,19 +11,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 改为 Windows 环境
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x  # 更改为 .NET 9
+        dotnet-version: 9.0.x  # 使用 .NET 9
     - name: Restore dependencies
-      run: dotnet restore v2rayN/v2rayN.sln  # 指定 .sln 文件进行恢复
+      run: dotnet restore v2rayN/v2rayN.sln
     - name: Build
-      run: dotnet build v2rayN/v2rayN.sln --no-restore  # 指定 .sln 文件进行构建
+      run: dotnet build v2rayN/v2rayN.sln --no-restore
     - name: Test
-      run: dotnet test v2rayN/v2rayN.sln --no-build --verbosity normal  # 指定 .sln 文件进行测试
+      run: dotnet test v2rayN/v2rayN.sln --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish v2rayN/v2rayN.sln -c Release -o ./publish  # 指定 .sln 文件进行发布
+      run: dotnet publish v2rayN/v2rayN.sln -c Release -o ./publish
