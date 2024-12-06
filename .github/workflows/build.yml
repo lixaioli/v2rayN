@@ -36,7 +36,12 @@ jobs:
         git tag $TagName  # 创建标签
         git push origin $TagName  # 推送标签到远程仓库
 
-    # 这里加一个延迟等待标签同步到 GitHub
+    # 使用 git fetch 确保标签已经同步
+    - name: Ensure tag is pushed
+      run: |
+        git fetch --tags  # 确保标签被拉取到本地并同步
+
+    # 增加一个延迟，等待标签同步
     - name: Wait for GitHub to recognize the tag
       run: sleep 10  # 等待10秒以确保标签推送到远程仓库
 
