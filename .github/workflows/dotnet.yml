@@ -11,7 +11,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +20,10 @@ jobs:
       with:
         dotnet-version: 9.0.x  # 更改为 .NET 9
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore v2rayN/v2rayN.sln  # 指定 .sln 文件进行恢复
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build v2rayN/v2rayN.sln --no-restore  # 指定 .sln 文件进行构建
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test v2rayN/v2rayN.sln --no-build --verbosity normal  # 指定 .sln 文件进行测试
     - name: Publish
-      run: dotnet publish -c Release -o ./publish  # 添加发布步骤
+      run: dotnet publish v2rayN/v2rayN.sln -c Release -o ./publish  # 指定 .sln 文件进行发布
