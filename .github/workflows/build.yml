@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    branches: [ "master" ]  # 确保推送到 master 分支才会触发发布
+    branches: [ "master" ]  # 只有推送到 master 分支时才会触发发布
 
 jobs:
   build:
@@ -34,16 +34,15 @@ jobs:
         git tag $TagName  # 创建标签
         git push origin $TagName  # 推送标签到远程仓库
 
-    # 使用 git fetch 确保标签已经同步
+    # 使用 git fetch 确保标签已同步
     - name: Ensure tag is pushed
       run: |
         git fetch --tags  # 确保标签被拉取到本地并同步
 
-    # 增加一个延迟，等待标签同步
+    # 增加延迟等待 GitHub 完成标签同步
     - name: Wait for GitHub to recognize the tag
-      run: sleep 10  # 等待10秒以确保标签推送到远程仓库
+      run: sleep 15  # 延迟15秒以确保标签同步
 
-    # 发布到 GitHub Release
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
