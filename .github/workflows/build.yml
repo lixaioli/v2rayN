@@ -51,7 +51,7 @@ jobs:
       run: git fetch --tags  # 拉取远程标签
 
     - name: Wait for GitHub to recognize the tag
-      run: sleep 15  # 延迟 15 秒，确保标签同步
+      run: sleep 60  # 延迟 60 秒，确保标签同步
 
     - name: Release
       uses: softprops/action-gh-release@v1
