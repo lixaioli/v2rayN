@@ -2,9 +2,7 @@ name: release
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches: [ "master" ]  # 确保推送到 master 分支才会触发发布
 
 jobs:
   build:
@@ -45,9 +43,10 @@ jobs:
     - name: Wait for GitHub to recognize the tag
       run: sleep 10  # 等待10秒以确保标签推送到远程仓库
 
+    # 发布到 GitHub Release
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ./v2rayN/v2rayN.zip
+        files: ./v2rayN/v2rayN.zip  # 确保上传的是构建产物
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
