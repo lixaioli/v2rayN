@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Build
@@ -32,13 +32,13 @@ jobs:
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag v$(date +'%Y%m%d%H%M%S')  # 创建一个基于当前时间的标签
-        git push origin v$(date +'%Y%m%d%H%M%S')  # 将标签推送到远程仓库
+        TAG_NAME="v$(date +'%Y%m%d%H%M%S')"  # 基于当前时间生成标签
+        git tag $TAG_NAME  # 创建标签
+        git push origin $TAG_NAME  # 推送标签到远程仓库
 
-    # 发布构建产物到 GitHub Releases
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: ./v2rayN/v2rayN.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 认证用的 GitHub Token
