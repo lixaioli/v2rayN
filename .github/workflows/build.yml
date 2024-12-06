@@ -12,14 +12,14 @@ jobs:
       matrix:
         configuration: [Release]
 
-    runs-on: windows-latest
+    runs-on: windows-latest 
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Build
-      run: cd v2rayN && ./build.ps1
+      run:  cd v2rayN && ./build.ps1
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -32,9 +32,19 @@ jobs:
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        TAG_NAME="v$(date +'%Y%m%d%H%M%S')"  # 根据当前时间生成标签
+        $TAG_NAME = "v$(Get-Date -Format 'yyyyMMddHHmmss')"  # 根据当前时间生成标签
         git tag $TAG_NAME  # 创建标签
         git push origin $TAG_NAME  # 推送标签到远程仓库
+        git tag  # 列出所有标签，确认标签已经创建
+      shell: pwsh
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./v2rayN/v2rayN.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        git push origin $TAG_NAME  # 推送标签到远程仓库
         git tag  # 列出所有标签，确认标签已经创建
 
     - name: Ensure tag is fetched
