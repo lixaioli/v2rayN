@@ -32,13 +32,13 @@ jobs:
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        TAG_NAME="v$(date +'%Y%m%d%H%M%S')"  # 基于当前时间生成标签
-        git tag $TAG_NAME  # 创建标签
-        git push origin $TAG_NAME  # 推送标签到远程仓库
+        $TagName = "v$(Get-Date -Format 'yyyyMMddHHmmss')"  # 使用 PowerShell 获取当前时间并格式化
+        git tag $TagName  # 创建标签
+        git push origin $TagName  # 推送标签到远程仓库
 
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: ./v2rayN/v2rayN.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 认证用的 GitHub Token
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
