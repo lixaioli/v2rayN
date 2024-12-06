@@ -36,6 +36,10 @@ jobs:
         git tag $TagName  # 创建标签
         git push origin $TagName  # 推送标签到远程仓库
 
+    # 这里加一个延迟等待标签同步到 GitHub
+    - name: Wait for GitHub to recognize the tag
+      run: sleep 10  # 等待10秒以确保标签推送到远程仓库
+
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
