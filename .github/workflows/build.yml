@@ -28,10 +28,17 @@ jobs:
         path: |
           ./v2rayN/v2rayN.zip
 
+    - name: Create a tag for release
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag v$(date +'%Y%m%d%H%M%S')  # 创建一个基于当前时间的标签
+        git push origin v$(date +'%Y%m%d%H%M%S')  # 将标签推送到远程仓库
+
     # 发布构建产物到 GitHub Releases
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ./v2rayN/v2rayN.zip  # 指定要发布的文件路径
+        files: ./v2rayN/v2rayN.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 自动生成的 Token 来进行身份验证
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
