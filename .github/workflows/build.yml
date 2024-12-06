@@ -2,7 +2,9 @@ name: release
 
 on:
   push:
-    branches: [ "master" ]  # 只有推送到 master 分支时才会触发发布
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -26,22 +28,20 @@ jobs:
         path: |
           ./v2rayN/v2rayN.zip
 
-    - name: Create a tag for release
+    - name: Create and push tag
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        $TagName = "v$(Get-Date -Format 'yyyyMMddHHmmss')"  # 使用 PowerShell 获取当前时间并格式化
-        git tag $TagName  # 创建标签
-        git push origin $TagName  # 推送标签到远程仓库
+        TAG_NAME="v$(date +'%Y%m%d%H%M%S')"  # 根据当前时间生成标签
+        git tag $TAG_NAME  # 创建标签
+        git push origin $TAG_NAME  # 推送标签到远程仓库
+        git tag  # 列出所有标签，确认标签已经创建
 
-    # 使用 git fetch 确保标签已同步
-    - name: Ensure tag is pushed
-      run: |
-        git fetch --tags  # 确保标签被拉取到本地并同步
+    - name: Ensure tag is fetched
+      run: git fetch --tags  # 拉取远程标签
 
-    # 增加延迟等待 GitHub 完成标签同步
     - name: Wait for GitHub to recognize the tag
-      run: sleep 15  # 延迟15秒以确保标签同步
+      run: sleep 15  # 延迟 15 秒，确保标签同步
 
     - name: Release
       uses: softprops/action-gh-release@v1
