@@ -21,7 +21,7 @@ Fedora 30+
 ```
 
 ## Requirements  
-- [Microsoft .NET 8.0 Desktop Runtime ](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [Microsoft .NET 8.0 Desktop Runtime ](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)- [Microsoft .NET 9.0 Desktop Runtime ](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - [Supported cores](https://github.com/2dust/v2rayN/wiki/List-of-supported-cores)
 
 
