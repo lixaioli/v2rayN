@@ -300,6 +300,7 @@ public sealed class AppManager
         return await SQLiteHelper.Instance.TableAsync<FullConfigTemplateItem>().FirstOrDefaultAsync(it => it.CoreType == eCoreType);
     }
 
+
     #endregion SqliteHelper
 
     #region Core Type
@@ -334,6 +335,7 @@ public sealed class AppManager
 
     #endregion Core Type
 }
+
 
 
 
