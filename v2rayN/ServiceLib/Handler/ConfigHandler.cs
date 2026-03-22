@@ -91,6 +91,7 @@ public static class ConfigHandler
         {
             EnableTun = false,
             Mtu = 9000,
+            IcmpRouting = Global.TunIcmpRoutingPolicies.First(),
         };
         config.GuiItem ??= new();
         config.MsgUIItem ??= new();
@@ -848,7 +849,8 @@ public static class ConfigHandler
         profileItem.Address = profileItem.Address.TrimEx();
         profileItem.Username = profileItem.Username.TrimEx();
         profileItem.Password = profileItem.Password.TrimEx();
-        profileItem.Network = profileItem.Network == "quic" ? "quic" : string.Empty;
+        profileItem.Alpn = string.Empty;
+        profileItem.Network = string.Empty;
         if (profileItem.StreamSecurity.IsNullOrEmpty())
         {
             profileItem.StreamSecurity = Global.StreamSecurity;
