@@ -161,8 +161,8 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         else
         {
             Title = $"{Utils.GetVersion()}";
+            menuAddServerViaScan.IsVisible = false;
         }
-        menuAddServerViaScan.IsVisible = false;
 
         if (_config.UiItem.AutoHideStartup && Utils.IsWindows())
         {
@@ -331,17 +331,17 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
 
     public async Task ScanScreenTaskAsync()
     {
-        //ShowHideWindow(false);
+        ShowHideWindow(false);
 
-        NoticeManager.Instance.SendMessageAndEnqueue("Not yet implemented.(还未实现)");
-        await Task.CompletedTask;
-        //if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        //{
-        //    //var bytes = QRCodeHelper.CaptureScreen(desktop);
-        //    //await ViewModel?.ScanScreenResult(bytes);
-        //}
+        await Task.Delay(200);
 
-        //ShowHideWindow(true);
+        var bytes = QRCodeAvaloniaUtils.CaptureScreen();
+        if (bytes != null && ViewModel != null)
+        {
+            await ViewModel.ScanScreenResult(bytes);
+        }
+
+        ShowHideWindow(true);
     }
 
     private async Task ScanImageTaskAsync()
