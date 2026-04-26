@@ -41,6 +41,7 @@ public static class ConfigHandler
             Loglevel = "warning",
             MuxEnabled = false,
         };
+        config.CoreBasicItem.SendThrough = config.CoreBasicItem.SendThrough?.TrimEx();
 
         if (config.Inbound == null)
         {
@@ -76,10 +77,11 @@ public static class ConfigHandler
             Tti = 50,
             UplinkCapacity = 12,
             DownlinkCapacity = 100,
-            ReadBufferSize = 2,
-            WriteBufferSize = 2,
-            Congestion = false
+            CwndMultiplier = 1,
+            MaxSendingWindow = 2 * 1024 * 1024,
         };
+        config.KcpItem.CwndMultiplier = config.KcpItem.CwndMultiplier <= 0 ? 1 : config.KcpItem.CwndMultiplier;
+        config.KcpItem.MaxSendingWindow = config.KcpItem.MaxSendingWindow <= 0 ? (2 * 1024 * 1024) : config.KcpItem.MaxSendingWindow;
         config.GrpcItem ??= new GrpcItem
         {
             IdleTimeout = 60,
@@ -133,6 +135,10 @@ public static class ConfigHandler
         {
             config.SpeedTestItem.MixedConcurrencyCount = 5;
         }
+        if (config.SpeedTestItem.UdpTestTarget.IsNullOrEmpty())
+        {
+            config.SpeedTestItem.UdpTestTarget = Global.UdpTestTargets.First();
+        }
 
         config.Mux4RayItem ??= new()
         {
@@ -160,7 +166,7 @@ public static class ConfigHandler
         config.Fragment4RayItem ??= new()
         {
             Packets = "tlshello",
-            Length = "100-200",
+            Length = "50-100",
             Interval = "10-20"
         };
         config.GlobalHotkeys ??= new();
@@ -235,9 +241,6 @@ public static class ConfigHandler
             item.Password = profileItem.Password;
 
             item.Network = profileItem.Network;
-            item.HeaderType = profileItem.HeaderType;
-            item.RequestHost = profileItem.RequestHost;
-            item.Path = profileItem.Path;
 
             item.StreamSecurity = profileItem.StreamSecurity;
             item.Sni = profileItem.Sni;
@@ -249,7 +252,6 @@ public static class ConfigHandler
             item.ShortId = profileItem.ShortId;
             item.SpiderX = profileItem.SpiderX;
             item.Mldsa65Verify = profileItem.Mldsa65Verify;
-            item.Extra = profileItem.Extra;
             item.MuxEnabled = profileItem.MuxEnabled;
             item.Cert = profileItem.Cert;
             item.CertSha = profileItem.CertSha;
@@ -257,6 +259,7 @@ public static class ConfigHandler
             item.EchForceQuery = profileItem.EchForceQuery;
             item.Finalmask = profileItem.Finalmask;
             item.ProtoExtra = profileItem.ProtoExtra;
+            item.TransportExtra = profileItem.TransportExtra;
         }
 
         var ret = item.ConfigType switch
@@ -296,9 +299,6 @@ public static class ConfigHandler
             VmessSecurity = profileItem.GetProtocolExtra().VmessSecurity?.TrimEx()
         });
         profileItem.Network = profileItem.Network.TrimEx();
-        profileItem.HeaderType = profileItem.HeaderType.TrimEx();
-        profileItem.RequestHost = profileItem.RequestHost.TrimEx();
-        profileItem.Path = profileItem.Path.TrimEx();
         profileItem.StreamSecurity = profileItem.StreamSecurity.TrimEx();
 
         if (!Global.VmessSecurities.Contains(profileItem.GetProtocolExtra().VmessSecurity))
@@ -750,10 +750,12 @@ public static class ConfigHandler
         profileItem.Password = profileItem.Password.TrimEx();
         profileItem.Network = string.Empty;
 
-        if (!Global.TuicCongestionControls.Contains(profileItem.HeaderType))
+        var congestionControl = profileItem.GetProtocolExtra().CongestionControl;
+        if (!Global.TuicCongestionControls.Contains(congestionControl))
         {
-            profileItem.HeaderType = Global.TuicCongestionControls.FirstOrDefault()!;
+            congestionControl = Global.TuicCongestionControls.FirstOrDefault()!;
         }
+        profileItem.SetProtocolExtra(profileItem.GetProtocolExtra() with { CongestionControl = congestionControl });
 
         if (profileItem.StreamSecurity.IsNullOrEmpty())
         {
@@ -995,9 +997,6 @@ public static class ConfigHandler
         profileItem.Address = profileItem.Address.TrimEx();
         profileItem.Password = profileItem.Password.TrimEx();
         profileItem.Network = profileItem.Network.TrimEx();
-        profileItem.HeaderType = profileItem.HeaderType.TrimEx();
-        profileItem.RequestHost = profileItem.RequestHost.TrimEx();
-        profileItem.Path = profileItem.Path.TrimEx();
         profileItem.StreamSecurity = profileItem.StreamSecurity.TrimEx();
 
         var vlessEncryption = profileItem.GetProtocolExtra().VlessEncryption?.TrimEx();
@@ -1042,13 +1041,19 @@ public static class ConfigHandler
 
         foreach (var item in lstProfile)
         {
-            if (!lstKeep.Exists(i => CompareProfileItem(i, item, false)))
+            if (item.IsComplex())
             {
                 lstKeep.Add(item);
+                continue;
+            }
+
+            if (lstKeep.Exists(i => CompareProfileItem(i, item, false)))
+            {
+                lstRemove.Add(item);
             }
             else
             {
-                lstRemove.Add(item);
+                lstKeep.Add(item);
             }
         }
         await RemoveServers(config, lstRemove);
@@ -1066,7 +1071,7 @@ public static class ConfigHandler
     /// <returns>0 if successful</returns>
     public static async Task<int> AddServerCommon(Config config, ProfileItem profileItem, bool toFile = true)
     {
-        profileItem.ConfigVersion = 3;
+        profileItem.ConfigVersion = 4;
 
         if (profileItem.StreamSecurity.IsNotEmpty())
         {
@@ -1134,6 +1139,8 @@ public static class ConfigHandler
 
         var oProtocolExtra = o.GetProtocolExtra();
         var nProtocolExtra = n.GetProtocolExtra();
+        var oTransport = o.GetTransportExtra();
+        var nTransport = n.GetTransportExtra();
 
         return o.ConfigType == n.ConfigType
                && AreEqual(o.Address, n.Address)
@@ -1144,9 +1151,16 @@ public static class ConfigHandler
                && AreEqual(oProtocolExtra.SsMethod, nProtocolExtra.SsMethod)
                && AreEqual(oProtocolExtra.VmessSecurity, nProtocolExtra.VmessSecurity)
                && AreEqual(o.Network, n.Network)
-               && AreEqual(o.HeaderType, n.HeaderType)
-               && AreEqual(o.RequestHost, n.RequestHost)
-               && AreEqual(o.Path, n.Path)
+               && AreEqual(oTransport.RawHeaderType, nTransport.RawHeaderType)
+               && AreEqual(oTransport.Host, nTransport.Host)
+               && AreEqual(oTransport.Path, nTransport.Path)
+               && AreEqual(oTransport.XhttpMode, nTransport.XhttpMode)
+               && AreEqual(oTransport.XhttpExtra, nTransport.XhttpExtra)
+               && AreEqual(oTransport.GrpcAuthority, nTransport.GrpcAuthority)
+               && AreEqual(oTransport.GrpcServiceName, nTransport.GrpcServiceName)
+               && AreEqual(oTransport.GrpcMode, nTransport.GrpcMode)
+               && AreEqual(oTransport.KcpHeaderType, nTransport.KcpHeaderType)
+               && AreEqual(oTransport.KcpSeed, nTransport.KcpSeed)
                && (o.ConfigType == EConfigType.Trojan || o.StreamSecurity == n.StreamSecurity)
                && AreEqual(oProtocolExtra.Flow, nProtocolExtra.Flow)
                && AreEqual(oProtocolExtra.SalamanderPass, nProtocolExtra.SalamanderPass)
@@ -1416,10 +1430,12 @@ public static class ConfigHandler
     public static ProfileItem? GetPreSocksItem(Config config, ProfileItem node, ECoreType coreType)
     {
         ProfileItem? itemSocks = null;
+        var enableLegacyProtect = config.TunModeItem.EnableLegacyProtect
+                                  || Utils.IsNonWindows();
         if (node.ConfigType != EConfigType.Custom
             && coreType != ECoreType.sing_box
             && config.TunModeItem.EnableTun
-            && config.TunModeItem.EnableLegacyProtect)
+            && enableLegacyProtect)
         {
             itemSocks = new ProfileItem()
             {
@@ -1929,6 +1945,12 @@ public static class ConfigHandler
         }
         await SQLiteHelper.Instance.DeleteAsync(item);
         await RemoveServersViaSubid(config, id, false);
+
+        if (item.Id == config.SubIndexId)
+        {
+            var subs = await AppManager.Instance.SubItems();
+            config.SubIndexId = subs.LastOrDefault()?.Id;
+        }
 
         return 0;
     }

@@ -60,6 +60,7 @@ public class ProfilesViewModel : MyReactiveObject
 
     public ReactiveCommand<Unit, Unit> TcpingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> RealPingServerCmd { get; }
+    public ReactiveCommand<Unit, Unit> UdpTestServerCmd { get; }
     public ReactiveCommand<Unit, Unit> SpeedServerCmd { get; }
     public ReactiveCommand<Unit, Unit> SortServerResultCmd { get; }
     public ReactiveCommand<Unit, Unit> RemoveInvalidServerResultCmd { get; }
@@ -177,6 +178,10 @@ public class ProfilesViewModel : MyReactiveObject
         RealPingServerCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await ServerSpeedtest(ESpeedActionType.Realping);
+        }, canEditRemove);
+        UdpTestServerCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await ServerSpeedtest(ESpeedActionType.UdpTest);
         }, canEditRemove);
         SpeedServerCmd = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -393,7 +398,7 @@ public class ProfilesViewModel : MyReactiveObject
         }
         SelectedSub = (_config.SubIndexId.IsNotEmpty()
                         ? SubItems.FirstOrDefault(t => t.Id == _config.SubIndexId)
-                        : null) ?? SubItems.LastOrDefault();
+                        : null) ?? SubItems.FirstOrDefault();
     }
 
     private async Task<List<ProfileItemModel>?> GetProfileItemsEx(string subid, string filter)
